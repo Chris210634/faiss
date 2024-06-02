@@ -25,6 +25,8 @@
 #include <faiss/impl/FaissAssert.h>
 #include <faiss/impl/IDSelector.h>
 
+#include <iostream>
+
 namespace faiss {
 
 using ScopedIds = InvertedLists::ScopedIds;
@@ -327,6 +329,9 @@ void IndexIVF::search(
         std::unique_ptr<float[]> coarse_dis(new float[n * nprobe]);
 
         double t0 = getmillisecs();
+        
+        std::cout << "HERE" << std::endl;
+        
         quantizer->search(
                 n,
                 x,
@@ -880,7 +885,7 @@ void IndexIVF::reconstruct(idx_t key, float* recons) const {
 }
 
 void IndexIVF::reconstruct_n(idx_t i0, idx_t ni, float* recons) const {
-    FAISS_THROW_IF_NOT(ni == 0 || (i0 >= 0 && i0 + ni <= ntotal));
+    // FAISS_THROW_IF_NOT(ni == 0 || (i0 >= 0 && i0 + ni <= ntotal));
 
     for (idx_t list_no = 0; list_no < nlist; list_no++) {
         size_t list_size = invlists->list_size(list_no);

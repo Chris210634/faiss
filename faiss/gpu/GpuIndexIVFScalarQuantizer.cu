@@ -257,5 +257,65 @@ void GpuIndexIVFScalarQuantizer::train(Index::idx_t n, const float* x) {
     this->is_trained = true;
 }
 
+void GpuIndexIVFScalarQuantizer::train_paired(Index::idx_t n, const float* x, const float* x_paired) {
+    DeviceScope scope(config_.device);
+
+    // For now, only support <= max int results
+    FAISS_THROW_IF_NOT_FMT(
+            n <= (Index::idx_t)std::numeric_limits<int>::max(),
+            "GPU index only supports up to %d indices",
+            std::numeric_limits<int>::max());
+
+    // just in case someone changed us
+    verifySQSettings_();
+    verifyIVFSettings_();
+
+    if (this->is_trained) {
+        FAISS_ASSERT(index_);
+        return;
+    }
+
+    FAISS_ASSERT(!index_);
+
+    // FIXME: GPUize more of this
+    // First, make sure that the data is resident on the CPU, if it is not on
+    // the CPU, as we depend upon parts of the CPU code
+    auto hostData = toHost<float, 2>(
+            (float*)x,
+            resources_->getDefaultStream(config_.device),
+            {(int)n, (int)this->d});
+            
+    auto hostData_paired = toHost<float, 2>(
+            (float*)x_paired,
+            resources_->getDefaultStream(config_.device),
+            {(int)n, (int)this->d});
+
+    trainQuantizer_(n, hostData.data(), hostData_paired.data());
+
+
+    trainResiduals_(n, hostData.data());
+
+    // The quantizer is now trained; construct the IVF index
+    index_.reset(new IVFFlat(
+            resources_.get(),
+            this->d,
+            this->nlist,
+            this->metric_type,
+            this->metric_arg,
+            by_residual,
+            &sq,
+            ivfSQConfig_.interleavedLayout,
+            ivfSQConfig_.indicesOptions,
+            config_.memorySpace));
+    baseIndex_ = std::static_pointer_cast<IVFBase, IVFFlat>(index_);
+    updateQuantizer();
+
+    if (reserveMemoryVecs_) {
+        index_->reserveMemory(reserveMemoryVecs_);
+    }
+
+    this->is_trained = true;
+}
+
 } // namespace gpu
 } // namespace faiss

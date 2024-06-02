@@ -132,7 +132,9 @@ class GpuIndexIVFPQ : public GpuIndexIVF {
 
     /// Trains the coarse and product quantizer based on the given vector data
     void train(Index::idx_t n, const float* x) override;
-
+    
+    void train_residual(Index::idx_t n, const float* x);
+    
    public:
     /// Like the CPU version, we expose a publically-visible ProductQuantizer
     /// for manipulation

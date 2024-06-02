@@ -77,13 +77,17 @@ void Clustering::train(
         idx_t nx,
         const float* x_in,
         Index& index,
-        const float* weights) {
+        const float* weights,
+        const float* x_paired
+) {
     train_encoded(
             nx,
             reinterpret_cast<const uint8_t*>(x_in),
             nullptr,
             index,
-            weights);
+            weights,
+            reinterpret_cast<const uint8_t*>(x_paired)
+            );
 }
 
 namespace {
@@ -273,7 +277,9 @@ void Clustering::train_encoded(
         const uint8_t* x_in,
         const Index* codec,
         Index& index,
-        const float* weights) {
+        const float* weights,
+        const uint8_t* x_paired
+        ) {
     FAISS_THROW_IF_NOT_FMT(
             nx >= k,
             "Number of training points (%" PRId64
@@ -487,7 +493,7 @@ void Clustering::train_encoded(
                     k,
                     nx,
                     k_frozen,
-                    x,
+                    x_paired ? x_paired : x,
                     codec,
                     assign.get(),
                     weights,

@@ -296,6 +296,22 @@ def handle_Index(the_class):
         assert d == self.d
         x = np.ascontiguousarray(x, dtype='float32')
         self.train_c(n, swig_ptr(x))
+        
+    def replacement_train_paired(self, x, x_paired):
+        assert x.shape == x_paired.shape
+        n, d = x.shape
+        assert d == self.d
+        
+        x = np.ascontiguousarray(x, dtype='float32')
+        x_paired = np.ascontiguousarray(x_paired, dtype='float32')
+        
+        self.train_paired_c(n, swig_ptr(x), swig_ptr(x_paired))
+        
+    def replacement_train_residual(self, x):
+        n, d = x.shape
+        assert d == self.d
+        x = np.ascontiguousarray(x, dtype='float32')
+        self.train_residual_c(n, swig_ptr(x))
 
     def replacement_search(self, x, k, *, params=None, D=None, I=None):
         """Find the k nearest neighbors of the set of vectors x in the index.
@@ -592,6 +608,16 @@ def handle_Index(the_class):
     replace_method(the_class, 'add_with_ids', replacement_add_with_ids)
     replace_method(the_class, 'assign', replacement_assign)
     replace_method(the_class, 'train', replacement_train)
+    
+    try:
+        replace_method(the_class, 'train_paired', replacement_train_paired)
+    except AttributeError:
+        pass
+    try:
+        replace_method(the_class, 'train_residual', replacement_train_residual)
+    except AttributeError:
+        pass
+    
     replace_method(the_class, 'search', replacement_search)
     replace_method(the_class, 'remove_ids', replacement_remove_ids)
     replace_method(the_class, 'reconstruct', replacement_reconstruct)

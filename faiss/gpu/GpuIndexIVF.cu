@@ -439,7 +439,7 @@ bool GpuIndexIVF::addImplRequiresIDs_() const {
     return true;
 }
 
-void GpuIndexIVF::trainQuantizer_(Index::idx_t n, const float* x) {
+void GpuIndexIVF::trainQuantizer_(Index::idx_t n, const float* x, const float* x_paired) {
     DeviceScope scope(config_.device);
 
     if (n == 0) {
@@ -464,7 +464,7 @@ void GpuIndexIVF::trainQuantizer_(Index::idx_t n, const float* x) {
     quantizer->reset();
     Clustering clus(this->d, nlist, this->cp);
     clus.verbose = verbose;
-    clus.train(n, x, *quantizer);
+    clus.train(n, x, *quantizer, nullptr, x_paired);
     quantizer->is_trained = true;
 
     FAISS_ASSERT(quantizer->ntotal == nlist);

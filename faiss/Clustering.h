@@ -87,7 +87,9 @@ struct Clustering : ClusteringParameters {
             idx_t n,
             const float* x,
             faiss::Index& index,
-            const float* x_weights = nullptr);
+            const float* x_weights = nullptr,
+            const float* x_paired = nullptr
+    );
 
     /** run with encoded vectors
      *
@@ -102,7 +104,9 @@ struct Clustering : ClusteringParameters {
             const uint8_t* x_in,
             const Index* codec,
             Index& index,
-            const float* weights = nullptr);
+            const float* weights = nullptr,
+            const uint8_t* x_paired = nullptr
+    );
 
     /// Post-process the centroids after each centroid update.
     /// includes optional L2 normalization and nearest integer rounding
